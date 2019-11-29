@@ -1,22 +1,26 @@
+library(magrittr)
+library(dplyr)
+library(rgdal)
+library(raster)
 
 
 #' Merge ObservedProperties 
 #'
 #' Takes the standard SoilDataFederator dataframe returned by getSoilData function and transposes the multiple observed propeties into individual columns.
-#' @param DF Dataframe to transpose
-#' @keywords cats
+#' @param soilDF Dataframe to transpose
+#' @keywords Transform
 #' @export
 #' @examples
 #' mergeObservedProperties(obsPropDF=DF)
 
-mergeObservedProperties <- function(obsPropDF){
+mergeObservedProperties <- function(soilDF){
   
   # check if sdfDF
   
  props <- unique(obsPropDF$ObservedProperty)
     
     lodfs <- vector("list", length(props)-1)
-    outdf <-  obsPropDF[obsPropDF$ObservedProperty == props[1], ]
+    outdf <-  soilDF[soilDF$ObservedProperty == props[1], ]
     names(outdf)[names(outdf) == "Value"] <- props[1]
     names(outdf)[names(outdf) == "Units"] <- paste0('Units_', props[1])
     outdf <- outdf[, -'ObservedProperty']
@@ -24,7 +28,7 @@ mergeObservedProperties <- function(obsPropDF){
     
     for(i in 2:length(props)){
      # print(i)
-      fdf <- as.data.frame(obsPropDF[obsPropDF$ObservedProperty == props[i], ])
+      fdf <- as.data.frame(soilDF[soilDF$ObservedProperty == props[i], ])
       # outdf <- merge(outdf, lodfs[[i]], 
       #                by = c('DataStore','Dataset','Provider', 'Observation_ID', 'SampleID', 'SampleDate', 'Longitude', 'Latitude', 
       #                       'UpperDepth', 'LowerDepth', 'PropertyType',  'QualCollection', 'QualSpatialAgg'
@@ -38,27 +42,67 @@ mergeObservedProperties <- function(obsPropDF){
     }
 }
 
-showDuplicateRecords <- function(df){
-  idx <- duplicated(df) | duplicated(df, fromLast = TRUE)
-  ot <- df[idx, ]
+showDuplicateRecords <- function(soilDF){
+  idx <- duplicated(soilDF) | duplicated(soilDF, fromLast = TRUE)
+  ot <- soilDF[idx, ]
   sot <- ot[order(ot$DataStore, ot$Dataset, ot$Provider, ot$Observation_ID, ot$UpperDepth, ot$LowerDepth, ot$ObservedProperty, ot$Value, decreasing = FALSE),]
   sot
   return(sot)
 }
 
-removeDuplicateRecords <- function(df){
-  noDups <- df[!duplicated(df),]
+removeDuplicateRecords <- function(soilDF){
+  noDups <- soilDF[!duplicated(soilDF),]
   return(noDups)
 }
 
-# df[!duplicated(df),]
-# 
-# t1 <- outdf[!duplicated(outdf), c("DataStore", "Dataset", "Provider", "Observation_ID", "SampleID", "SampleDate","Longitude", "Latitude", "UpperDepth", "LowerDepth", "2Z2_Clay")]
-# t2 <- jdf[!duplicated(jdf), c("DataStore", "Dataset", "Provider", "Observation_ID", "SampleID", "SampleDate","Longitude", "Latitude", "UpperDepth", "LowerDepth", "Value")]
-# ot <- dplyr::full_join(t1, t2)
-# sot <- ot[order(ot$DataStore, ot$Dataset, ot$Provider, ot$Observation_ID, ot$UpperDepth, ot$LowerDepth, decreasing = FALSE),]
-# sot
-# 
-# 
-# which(duplicated(outdf) )
-# df[23083:23084,]
+
+#' Return locations of samples
+#'
+#' Takes the standard SoilDataFederator dataframe returned by getSoilData function and generates a spatialPointsDataFrame .
+#' @param soilDF Dataframe to generate site locations for
+#' @keywords spatialPointsDataFrame
+#' @export
+#' @examples
+#' makeLocations(soilDF=DF)
+
+
+makeLocations <- function(soilDF, drawit=F){
+  
+  idxs <- which(is.na(soilDF$Longitude) | is.na(soilDF$Latitude))
+  locPts <- soilDF[-idxs, ]
+  
+  locPts2 <- inAustralia(locPts)
+  
+  pts <- locPts2 %>% group_by(DataStore, Dataset, Provider, Observation_ID,  SampleDate, Longitude, Latitude) %>% summarise(n())
+  coordinates(pts) <- ~Longitude+Latitude
+  crs(pts) <- CRS("+proj=longlat +datum=WGS84")
+  
+  if(drawit){
+    plot(AustBdy)
+    points(pts, col='red')
+  }
+  
+  return(pts)
+}
+
+
+#' Return locations only within the bounding box od Australia
+#'
+#' Takes the standard SoilDataFederator dataframe returned by getSoilData function and filters the locations to the extent of Australia .
+#' @param soilDF Dataframe to filter
+#' @keywords dataframe
+#' @export
+#' @examples
+#' inAustralia(soilDF=DF)
+
+inAustralia <- function(soilDF){
+  bboxExt <- extent(110,153,-43,-9)
+  idxs <- which(soilDF$Longitude >= bboxExt@xmin & soilDF$Longitude <= bboxExt@xmax & soilDF$Latitude >= bboxExt@ymin & soilDF$Latitude <= bboxExt@ymax)
+  outdf <- soilDF[idxs, ]
+}
+
+
+
+
+
+

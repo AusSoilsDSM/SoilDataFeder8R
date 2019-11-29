@@ -4,10 +4,10 @@
 \alias{mergeObservedProperties}
 \title{Merge ObservedProperties}
 \usage{
-mergeObservedProperties(obsPropDF)
+mergeObservedProperties(soilDF)
 }
 \arguments{
-\item{DF}{Dataframe to transpose}
+\item{soilDF}{Dataframe to transpose}
 }
 \description{
 Takes the standard SoilDataFederator dataframe returned by getSoilData function and transposes the multiple observed propeties into individual columns.
@@ -15,4 +15,4 @@ Takes the standard SoilDataFederator dataframe returned by getSoilData function 
 \examples{
 mergeObservedProperties(obsPropDF=DF)
 }
-\keyword{cats}
+\keyword{Transform}
