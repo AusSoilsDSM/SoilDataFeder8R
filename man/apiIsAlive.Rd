@@ -4,10 +4,10 @@
 \alias{apiIsAlive}
 \title{apiIsAlive}
 \usage{
-apiIsAlive(usr = "Demo", key = "Demo")
+apiIsAlive()
 }
 \description{
-checks to see if the SoilDataFederator is alive and well.
+Checks to see if the SoilDataFederator is alive and well.
 }
 \examples{
 apiIsAlive()

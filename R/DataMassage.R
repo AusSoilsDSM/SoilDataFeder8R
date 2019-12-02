@@ -15,7 +15,7 @@ library(raster)
 
 mergeObservedProperties <- function(soilDF){
   
-  # check if sdfDF
+  if(!isValidSoilDataframe(soilDF)){return(NULL)}
   
  props <- unique(obsPropDF$ObservedProperty)
     
@@ -43,6 +43,9 @@ mergeObservedProperties <- function(soilDF){
 }
 
 showDuplicateRecords <- function(soilDF){
+  
+  if(!isValidSoilDataframe(soilDF)){return(NULL)}
+  
   idx <- duplicated(soilDF) | duplicated(soilDF, fromLast = TRUE)
   ot <- soilDF[idx, ]
   sot <- ot[order(ot$DataStore, ot$Dataset, ot$Provider, ot$Observation_ID, ot$UpperDepth, ot$LowerDepth, ot$ObservedProperty, ot$Value, decreasing = FALSE),]
@@ -67,6 +70,8 @@ removeDuplicateRecords <- function(soilDF){
 
 
 makeLocations <- function(soilDF, drawit=F){
+  
+  if(!isValidSoilDataframe(soilDF)){return(NULL)}
   
   idxs <- which(is.na(soilDF$Longitude) | is.na(soilDF$Latitude))
   locPts <- soilDF[-idxs, ]
@@ -96,10 +101,41 @@ makeLocations <- function(soilDF, drawit=F){
 #' inAustralia(soilDF=DF)
 
 inAustralia <- function(soilDF){
+  
+  if(!isValidSoilDataframe(soilDF)){return(NULL)}
   bboxExt <- extent(110,153,-43,-9)
   idxs <- which(soilDF$Longitude >= bboxExt@xmin & soilDF$Longitude <= bboxExt@xmax & soilDF$Latitude >= bboxExt@ymin & soilDF$Latitude <= bboxExt@ymax)
   outdf <- soilDF[idxs, ]
 }
+
+
+
+tidyUpSoilData <- function(soilDF, minVal=0, maxVal=NULL, minDepth=0, maxDepth=NULL, inAust, action='show'){
+  
+  if(is.null(maxValue)){ stop('You need to specify a maximum value')}
+  if(is.null(maxDepth)){ stop('You need to specify a maximum depth')}
+  
+  if(!isValidSoilDataframe(soilDF)){return(NULL)}
+  
+  outdf <- data.frame()
+  md <- soilDF[which(soilDF$Value < minVal), ]
+  md$Issue <- 'Value less than allowable minimum value'
+  outdf <- rbind(outdf, md)
+  mx <- soilDF[which(soilDF$Value > maxVal), ]
+  mx$Issue <- 'Value greater than allowable maximum value'
+  outdf <- rbind(outdf, mx)
+  mdepth <- soilDF[which(soilDF$LowerDepth < minDepth), ]
+  mdepth$Issue <- 'Depth less than allowable minimum depth'
+  outdf <- rbind(outdf, mdepth)
+  mxdepth <- soilDF[which(soilDF$UpperDepth > maxDepth), ]
+  mxdepth$Issue <- 'Depth greater than allowable maximum depth'
+  outdf <- rbind(outdf, mxdepth)
+  
+  tail(outdf)
+}
+
+
+
 
 
 
