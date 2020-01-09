@@ -7,7 +7,7 @@
 summariseContinuousSoilData(soilDF, outputs = "All")
 }
 \arguments{
-\item{soilDF}{Dataframe to generate site locations for}
+\item{soilDF}{Dataframe to summarise}
 }
 \description{
 Returns a list of various summary statistics and charts.

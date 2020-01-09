@@ -17,13 +17,13 @@ mergeObservedProperties <- function(soilDF){
   
   if(!isValidSoilDataframe(soilDF)){return(NULL)}
   
- props <- unique(obsPropDF$ObservedProperty)
+ props <- unique(soilDF$ObservedProperty)
     
     lodfs <- vector("list", length(props)-1)
     outdf <-  soilDF[soilDF$ObservedProperty == props[1], ]
     names(outdf)[names(outdf) == "Value"] <- props[1]
     names(outdf)[names(outdf) == "Units"] <- paste0('Units_', props[1])
-    outdf <- outdf[, -'ObservedProperty']
+    outdf <- outdf[, -10]
     outdf <- as.data.frame(outdf, rownames(NULL))[ ,  c("DataStore", "Dataset", "Provider", "Observation_ID", "SampleID", "SampleDate", "Longitude", "Latitude", "UpperDepth", "LowerDepth", props[1])]
     
     for(i in 2:length(props)){
